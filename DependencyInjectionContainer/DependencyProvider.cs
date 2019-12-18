@@ -65,31 +65,30 @@ namespace DependencyInjectionContainer
             if (_dependencyConfiguration.IsExcluded(dependency.Type))
                 throw new DependencyException($"Dependency type {dependency.Type} leads recursion!");
             _dependencyConfiguration.ExcludeType(dependency.Type);
+            object result = null;
             if (dependency.LifeType == LifeType.InstancePerDependency)
             {
-                _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
-                return Creator.GetInstance(dependency.Type, _dependencyConfiguration);
+                result =  Creator.GetInstance(dependency.Type, _dependencyConfiguration);
             }
-            if (dependency.LifeType == LifeType.Singleton)
+            else if (dependency.LifeType == LifeType.Singleton)
             {
                 if (_instances.TryGetValue(dependency.Key, out var instance))
                 {
-                    _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
-                    return instance;
+                    
+                    result = instance;
                 }
-                instance = Creator.GetInstance(dependency.Type, _dependencyConfiguration);
-                while (!_instances.TryAdd(dependency.Key, instance))
+                else
                 {
-                    Thread.Sleep(1);
+                    result = Creator.GetInstance(dependency.Type, _dependencyConfiguration);
+                    while (!_instances.TryAdd(dependency.Key, result))
+                    {
+                        Thread.Sleep(1);
+                    }
                 }
-
-                
-                _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
-                return instance;
             }
             _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
 
-            return null;
+            return result;
         }
 
         private Dependency GetNamedDependency(Type @interface, object key)

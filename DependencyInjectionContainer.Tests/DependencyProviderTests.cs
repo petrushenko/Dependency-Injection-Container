@@ -129,12 +129,13 @@ namespace DependencyInjectionContainer.Tests
         {
             var configuration = new DependenciesConfiguration();
             configuration.Register<IRepository, MyRepository>();
+            configuration.Register<IRepository, MyAnotherRepository>("yes");
             configuration.Register<IService<IRepository>, ServiceImpl3<IRepository>>();
             var container = new DependencyProvider(configuration);
             var service = container.Resolve<IService<IRepository>>();
 
             Assert.IsInstanceOfType(service, typeof(ServiceImpl3<IRepository>));
-            Assert.IsInstanceOfType(((ServiceImpl3<IRepository>)service).Repository, typeof(MyRepository));
+            Assert.IsInstanceOfType(((ServiceImpl3<IRepository>)service).Repository, typeof(MyAnotherRepository));
         }
     }
 }

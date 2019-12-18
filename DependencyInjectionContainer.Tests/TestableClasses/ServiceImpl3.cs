@@ -6,7 +6,7 @@ namespace DependencyInjectionContainer.Tests.TestableClasses
         where T : IRepository
     {
         public T Repository;
-        public ServiceImpl3(T repository)
+        public ServiceImpl3([DependencyKey("yes")]T repository)
         {
             Repository = repository;
         }

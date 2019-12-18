@@ -59,6 +59,7 @@
     <Compile Include="TestableClasses\IBaseService.cs" />
     <Compile Include="TestableClasses\IRepository.cs" />
     <Compile Include="TestableClasses\IService.cs" />
+    <Compile Include="TestableClasses\MyAnotherRepository.cs" />
     <Compile Include="TestableClasses\MyRepository.cs" />
     <Compile Include="TestableClasses\SelfDependent.cs" />
     <Compile Include="TestableClasses\ServiceImpl1.cs" />

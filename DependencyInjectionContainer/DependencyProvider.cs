@@ -109,8 +109,13 @@ namespace DependencyInjectionContainer
                     genericDependency = GetNamedDependency(@interface.GetGenericTypeDefinition(), key);
                 }
                 var genericType = genericDependency.Type.MakeGenericType(@interface.GenericTypeArguments);
+                if (genericDependency.Instance == null)
+                {
+                    genericDependency.Instance = Creator.GetInstance(genericType, _dependencyConfiguration);
+                }
                 //singleton?????
-                return new Dependency(genericType, genericDependency.LifeType, genericDependency.Key) { Instance = genericDependency.Instance };
+                var tempGenericDependency = new Dependency(genericType, genericDependency.LifeType, genericDependency.Key) { Instance = genericDependency.Instance };
+                return tempGenericDependency;
             }
             if (key != null) return GetNamedDependency(@interface, key);
             if (_dependencyConfiguration.TryGet(@interface, out var dependency))

@@ -27,8 +27,8 @@ namespace DependencyInjectionContainer.Tests
         {
             var configuration = new DependenciesConfiguration();
             configuration.Register(typeof(IRepository), typeof(MyRepository));
-            configuration.Register<IService<IRepository>, ServiceImpl1<IRepository>>(LifeType.Singleton, "1");
-            configuration.Register<IService<IRepository>, ServiceImpl1<IRepository>>(LifeType.InstancePerDependency, "2");
+            configuration.Register(typeof(IService<>), typeof(ServiceImpl1<>), LifeType.Singleton, "1");
+            configuration.Register(typeof(IService<>), typeof(ServiceImpl1<>), LifeType.InstancePerDependency, "2");
             var container = new DependencyProvider(configuration);
             var serviceImpl1 = container.Resolve<IService<IRepository>>("1");
             var serviceImpl2 = container.Resolve<IService<IRepository>>("2");

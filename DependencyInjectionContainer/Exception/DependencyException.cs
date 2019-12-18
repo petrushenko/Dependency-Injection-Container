@@ -1,7 +1,19 @@
-﻿namespace DependencyInjectionContainer.Exception
+﻿using System;
+using System.Runtime.Serialization;
+
+namespace DependencyInjectionContainer.Exception
 {
+    [Serializable]
     public class DependencyException : System.Exception
     {
+        public DependencyException()
+        {
+        }
+
+        protected DependencyException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+
         public DependencyException(string message) : base(message)
         {
         }

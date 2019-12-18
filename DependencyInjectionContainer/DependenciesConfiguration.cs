@@ -8,6 +8,23 @@ namespace DependencyInjectionContainer
     {
         private readonly Dictionary<Type, List<Dependency>> _dependencies = new Dictionary<Type, List<Dependency>>();
 
+        private readonly List<Type> _excludedTypes = new List<Type>();
+
+        internal void ExcludeType(Type type)
+        {
+            _excludedTypes.Add(type);
+        }
+
+        internal void RemoveFromExcluded(Type type)
+        {
+            _excludedTypes.Remove(type);
+        }
+
+        internal bool IsExcluded(Type type)
+        {
+            return _excludedTypes.Contains(type);
+        }
+
         public void Register<TInterface, TImplementation>(string name)
             where TInterface : class
             where TImplementation : class

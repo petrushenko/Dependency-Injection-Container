@@ -13,7 +13,7 @@ namespace DependencyInjectionContainer
     {
         private readonly DependenciesConfiguration _dependencyConfiguration;
 
-        private readonly ConcurrentDictionary<Dependency, object> _instances = new ConcurrentDictionary<Dependency, object>();
+        private readonly ConcurrentDictionary<object, object> _instances = new ConcurrentDictionary<object, object>();
 
         public DependencyProvider(DependenciesConfiguration dependencyConfiguration)
         {
@@ -62,24 +62,32 @@ namespace DependencyInjectionContainer
 
         private object ResolveDependency(Dependency dependency)
         {
+            if (_dependencyConfiguration.IsExcluded(dependency.Type))
+                throw new DependencyException($"Dependency type {dependency.Type} leads recursion!");
+            _dependencyConfiguration.ExcludeType(dependency.Type);
             if (dependency.LifeType == LifeType.InstancePerDependency)
             {
+                _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
                 return Creator.GetInstance(dependency.Type, _dependencyConfiguration);
             }
             if (dependency.LifeType == LifeType.Singleton)
             {
-                if (_instances.TryGetValue(dependency, out var instance))
+                if (_instances.TryGetValue(dependency.Key, out var instance))
                 {
+                    _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
                     return instance;
                 }
                 instance = Creator.GetInstance(dependency.Type, _dependencyConfiguration);
-                while (!_instances.TryAdd(dependency, instance))
+                while (!_instances.TryAdd(dependency.Key, instance))
                 {
                     Thread.Sleep(1);
                 }
 
+                
+                _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
                 return instance;
             }
+            _dependencyConfiguration.RemoveFromExcluded(dependency.Type);
 
             return null;
         }
@@ -99,14 +107,18 @@ namespace DependencyInjectionContainer
 
         private Dependency GetDependency(Type @interface, object key = null)
         {
-            if (key != null) return GetNamedDependency(@interface, key);
+            //var new_type = @interface.IsGenericType ? @interface.GetGenericTypeDefinition() : @interface;
             if (@interface.IsGenericType &&
                 _dependencyConfiguration.TryGet(@interface.GetGenericTypeDefinition(), out var genericDependency))
             {
+                if (key != null)
+                {
+                    genericDependency = GetNamedDependency(@interface.GetGenericTypeDefinition(), key);
+                }
                 var genericType = genericDependency.Type.MakeGenericType(@interface.GenericTypeArguments);
                 return new Dependency(genericType, genericDependency.LifeType, genericDependency.Key);
             }
-
+            if (key != null) return GetNamedDependency(@interface, key);
             if (_dependencyConfiguration.TryGet(@interface, out var dependency))
             {
                 return dependency;

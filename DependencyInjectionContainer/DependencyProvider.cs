@@ -1,19 +1,15 @@
-﻿using System;
+﻿using DependencyInjectionContainer.Attribute;
+using DependencyInjectionContainer.Exception;
+using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
-using DependencyInjectionContainer.Attribute;
-using DependencyInjectionContainer.Exception;
 
 namespace DependencyInjectionContainer
 {
     public class DependencyProvider
     {
         private readonly DependenciesConfiguration _dependencyConfiguration;
-
-        private readonly ConcurrentDictionary<object, object> _instances = new ConcurrentDictionary<object, object>();
 
         public DependencyProvider(DependenciesConfiguration dependencyConfiguration)
         {
@@ -29,18 +25,18 @@ namespace DependencyInjectionContainer
         public TInterface Resolve<TInterface>()
             where TInterface : class
         {
-            return (TInterface) Resolve(typeof(TInterface));
+            return (TInterface)Resolve(typeof(TInterface));
         }
 
         public TInterface Resolve<TInterface>(object name)
         {
-            return (TInterface) Resolve(typeof(TInterface), name);
+            return (TInterface)Resolve(typeof(TInterface), name);
         }
 
         public IEnumerable<T> ResolveAll<T>()
             where T : class
         {
-            return (IEnumerable<T>) ResolveAll(typeof(T));
+            return (IEnumerable<T>)ResolveAll(typeof(T));
         }
 
         public IEnumerable<object> ResolveAll(Type @interface)
@@ -54,7 +50,7 @@ namespace DependencyInjectionContainer
                     collection.Add(ResolveDependency(dependency));
                 }
 
-                return (IEnumerable<object>) collection;
+                return (IEnumerable<object>)collection;
             }
 
             return null;
@@ -68,21 +64,20 @@ namespace DependencyInjectionContainer
             object result = null;
             if (dependency.LifeType == LifeType.InstancePerDependency)
             {
-                result =  Creator.GetInstance(dependency.Type, _dependencyConfiguration);
+                result = Creator.GetInstance(dependency.Type, _dependencyConfiguration);
             }
             else if (dependency.LifeType == LifeType.Singleton)
             {
-                if (_instances.TryGetValue(dependency.Key, out var instance))
+                lock (dependency)
                 {
-                    
-                    result = instance;
-                }
-                else
-                {
-                    result = Creator.GetInstance(dependency.Type, _dependencyConfiguration);
-                    while (!_instances.TryAdd(dependency.Key, result))
+                    if (dependency.Instance == null)
                     {
-                        Thread.Sleep(1);
+                        result = Creator.GetInstance(dependency.Type, _dependencyConfiguration);
+                        dependency.Instance = result;
+                    }
+                    else
+                    {
+                        result = dependency.Instance;
                     }
                 }
             }
@@ -106,7 +101,6 @@ namespace DependencyInjectionContainer
 
         private Dependency GetDependency(Type @interface, object key = null)
         {
-            //var new_type = @interface.IsGenericType ? @interface.GetGenericTypeDefinition() : @interface;
             if (@interface.IsGenericType &&
                 _dependencyConfiguration.TryGet(@interface.GetGenericTypeDefinition(), out var genericDependency))
             {
@@ -115,7 +109,8 @@ namespace DependencyInjectionContainer
                     genericDependency = GetNamedDependency(@interface.GetGenericTypeDefinition(), key);
                 }
                 var genericType = genericDependency.Type.MakeGenericType(@interface.GenericTypeArguments);
-                return new Dependency(genericType, genericDependency.LifeType, genericDependency.Key);
+                //singleton?????
+                return new Dependency(genericType, genericDependency.LifeType, genericDependency.Key) { Instance = genericDependency.Instance };
             }
             if (key != null) return GetNamedDependency(@interface, key);
             if (_dependencyConfiguration.TryGet(@interface, out var dependency))
@@ -134,7 +129,7 @@ namespace DependencyInjectionContainer
             }
             var dependency = GetDependency(@interface, key);
 
-            return ResolveDependency(dependency); 
+            return ResolveDependency(dependency);
         }
 
     }

@@ -10,6 +10,8 @@ namespace DependencyInjectionContainer
 
         public object Key { get; }
 
+        public object Instance { get; set; }
+
         public Dependency(Type type, LifeType lifeType, object key)
         {
             Key = key;

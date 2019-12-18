@@ -27,14 +27,14 @@ namespace DependencyInjectionContainer
 
         public void Register<TInterface, TImplementation>(string name)
             where TInterface : class
-            where TImplementation : class
+            where TImplementation : class, TInterface
         {
             Register(typeof(TInterface), typeof(TImplementation), LifeType.InstancePerDependency, name);
         }
 
         public void Register<TInterface, TImplementation>(LifeType lifeType, object name)
             where TInterface : class
-            where TImplementation : class
+            where TImplementation : class, TInterface
         {
             Register(typeof(TInterface), typeof(TImplementation), lifeType, name);
         }
@@ -92,14 +92,14 @@ namespace DependencyInjectionContainer
 
         public void Register<TInterface, TImplementation>(LifeType lifeType = LifeType.InstancePerDependency)
             where TInterface : class
-            where TImplementation : class
+            where TImplementation : class, TInterface
         {
             Register(typeof(TInterface), typeof(TImplementation), lifeType);
         }
 
         public void RegisterSingleton<TInterface, TImplementation>()
             where TInterface : class
-            where TImplementation : class
+            where TImplementation : class, TInterface
         {
             Register(typeof(TInterface), typeof(TImplementation), LifeType.Singleton);
         }
